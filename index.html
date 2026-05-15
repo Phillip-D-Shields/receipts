@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="en-NZ">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>She'll Be Right — A Cheeky Audit of Aotearoa's Wealth</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=DM+Mono:wght@400;500&family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..900,0..100,0..1&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+<!-- Chart.js for the Chapter 2 + 3 data visualisations -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --paper: #f1ead6;
+    --paper-dark: #e6dec5;
+    --ink: #181613;
+    --ink-soft: #2a2620;
+    --chart-bg: #221e18;     /* dark panel for bar charts */
+    --chart-grid: rgba(241,234,214,0.08);
+    --hivis: #ff3b1f;
+    --hivis-2: #ffd400;
+    --teal: #0e5e5b;
+    --rule: rgba(24,22,19,0.15);
+    --rule-strong: rgba(24,22,19,0.55);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Fraunces', Georgia, serif;
+    font-variation-settings: "SOFT" 30, "WONK" 0;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.5;
+    overflow-x: hidden;
+    background-image:
+      radial-gradient(rgba(24,22,19,0.05) 1px, transparent 1px),
+      radial-gradient(rgba(24,22,19,0.04) 1px, transparent 1px);
+    background-size: 3px 3px, 7px 7px;
+    background-position: 0 0, 1px 1px;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0.35;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.1  0 0 0 0 0.1  0 0 0 0 0.1  0 0 0 0 0.15 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+
+  .display { font-family: 'Bowlby One', Impact, sans-serif; letter-spacing: -0.01em; }
+  .mono { font-family: 'DM Mono', ui-monospace, monospace; }
+  .scrawl { font-family: 'Caveat', cursive; }
+
+  /* ---------- masthead ---------- */
+  .masthead {
+    border-bottom: 3px double var(--ink);
+    padding: 16px 32px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--paper);
+    position: sticky; top: 0; z-index: 50;
+  }
+  .masthead .left, .masthead .right {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+  .masthead .right span { padding: 2px 6px; background: var(--ink); color: var(--paper); }
+
+  /* ---------- hero ---------- */
+  .hero {
+    padding: 60px 6vw 80px;
+    border-bottom: 1px solid var(--rule);
+    position: relative;
+  }
+  .kicker {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    background: var(--ink);
+    color: var(--hivis-2);
+    padding: 6px 12px;
+    margin-bottom: 28px;
+    transform: rotate(-1deg);
+  }
+  h1.title {
+    font-family: 'Bowlby One', Impact, sans-serif;
+    font-size: clamp(64px, 12vw, 220px);
+    line-height: 0.88;
+    letter-spacing: -0.025em;
+    margin-bottom: 24px;
+  }
+  h1.title .em { color: var(--hivis); display: inline-block; }
+  h1.title .strike { text-decoration: line-through; text-decoration-thickness: 6px; text-decoration-color: var(--hivis); opacity: 0.55; }
+  h1.title .wonk { font-variation-settings: "WONK" 1, "SOFT" 100; font-family: 'Fraunces', serif; font-weight: 900; font-style: italic; }
+
+  .dek {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(20px, 2.4vw, 28px);
+    max-width: 900px;
+    line-height: 1.35;
+    margin-top: 12px;
+    font-weight: 400;
+  }
+  .dek em { font-style: italic; color: var(--teal); }
+
+  .hero-meta {
+    margin-top: 40px;
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .hero-meta span { border-left: 3px solid var(--hivis); padding-left: 10px; }
+
+  /* sticker */
+  .sticker {
+    position: absolute;
+    top: 80px;
+    right: 5vw;
+    width: 180px;
+    height: 180px;
+    background: var(--hivis);
+    color: var(--paper);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    font-family: 'Bowlby One', sans-serif;
+    font-size: 14px;
+    line-height: 1.1;
+    padding: 18px;
+    transform: rotate(12deg);
+    box-shadow: 6px 6px 0 var(--ink);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .sticker span { display: block; }
+  .sticker .big { font-size: 48px; line-height: 1; margin: 6px 0; }
+
+  /* ---------- sections ---------- */
+  section.chapter {
+    padding: 96px 6vw;
+    border-bottom: 1px solid var(--rule);
+    position: relative;
+  }
+
+  .chapter-no {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 12px;
+  }
+  .chapter-no::before { content: "§ "; color: var(--hivis); }
+
+  h2 {
+    font-family: 'Bowlby One', sans-serif;
+    font-size: clamp(40px, 6vw, 88px);
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+    margin-bottom: 24px;
+    max-width: 18ch;
+  }
+  h2 .accent { color: var(--hivis); }
+  h2 .underline { background: linear-gradient(transparent 65%, var(--hivis-2) 65%); padding: 0 4px; }
+
+  .lede {
+    font-size: clamp(18px, 1.6vw, 22px);
+    max-width: 64ch;
+    margin-bottom: 48px;
+    line-height: 1.45;
+  }
+
+  /* ---------- chapter 1: the split ---------- */
+  .split-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    margin-top: 32px;
+    border: 2px solid var(--ink);
+  }
+  .split-grid > div {
+    padding: 32px;
+    position: relative;
+  }
+  .split-grid .top20 {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .split-grid .bottom40 {
+    background: var(--paper-dark);
+    border-left: 2px solid var(--ink);
+  }
+  .split-num {
+    font-family: 'Bowlby One', sans-serif;
+    font-size: clamp(56px, 9vw, 140px);
+    line-height: 0.85;
+    margin-bottom: 8px;
+  }
+  .top20 .split-num { color: var(--hivis-2); }
+  .bottom40 .split-num { color: var(--ink); }
+  .split-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    margin-bottom: 16px;
+    opacity: 0.7;
+  }
+  .split-desc { font-size: 18px; line-height: 1.4; }
+
+  /* dots visualisation — now on a dark panel for consistency with charts */
+  .dots-wrap {
+    margin-top: 64px;
+    padding: 32px;
+    background: var(--chart-bg);
+    color: var(--paper);
+    border: 2px solid var(--ink);
+  }
+  .dots-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: 16px;
+    color: var(--paper);
+  }
+  .dots {
+    display: grid;
+    grid-template-columns: repeat(20, 1fr);
+    gap: 4px;
+    margin-bottom: 16px;
+  }
+  .dot {
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: rgba(241,234,214,0.18); /* faint paper-tone on dark bg */
+  }
+  .dot.rich { background: var(--hivis); }
+  .dots-caption {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: rgba(241,234,214,0.7);
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .dots-caption .swatch {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+
+  /* ---------- chapter 2: primer cards ---------- */
+  .primer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 24px;
+    margin-bottom: 8px;
+  }
+  .primer .card {
+    background: var(--paper-dark);
+    border: 2px solid var(--ink);
+    padding: 24px;
+  }
+  .primer .card .label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--hivis);
+    margin-bottom: 8px;
+  }
+  .primer .card h4 {
+    font-family: 'Bowlby One', sans-serif;
+    font-size: 22px;
+    line-height: 1;
+    margin-bottom: 10px;
+  }
+  .primer .card p {
+    font-size: 15px;
+    line-height: 1.45;
+  }
+  @media (max-width: 800px) {
+    .primer { grid-template-columns: 1fr; }
+  }
+
+  /* ---------- chapter 3: billionaires bar chart on dark panel ---------- */
+  .bill-stack {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 64px;
+    align-items: start;
+  }
+  .bill-stack .left h3 {
+    font-family: 'Bowlby One', sans-serif;
+    font-size: clamp(28px, 3vw, 40px);
+    line-height: 1;
+    margin-bottom: 18px;
+  }
+  .bill-stack .left p { font-size: 18px; line-height: 1.5; margin-bottom: 18px; max-width: 50ch; }
+
+  /* ---------- unified Chart.js panel wrapper (used by ch2 + ch3) ---------- */
+  .chartjs-panel {
+    background: var(--chart-bg);
+    padding: 32px 28px 24px;
+    margin-top: 24px;
+    border: 2px solid var(--ink);
+    color: var(--paper);
+  }
+  .chartjs-panel .panel-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(241,234,214,0.6);
+    margin-bottom: 8px;
+  }
+  .chartjs-panel .panel-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: rgba(241,234,214,0.45);
+    margin-bottom: 24px;
+    line-height: 1.4;
+  }
+  .chartjs-canvas-wrap {
+    position: relative;
+    width: 100%;
+  }
+  .chartjs-footnote {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(241,234,214,0.18);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    color: rgba(241,234,214,0.7);
+    max-width: 70ch;
+  }
+  .chartjs-footnote strong { color: var(--paper); font-weight: 500; }
+
+  .bill-scrawl {
+    font-family: 'Caveat', cursive;
+    font-size: 28px;
+    color: var(--hivis);
+    transform: rotate(-3deg);
+    margin-top: 20px;
+    line-height: 1.1;
+  }
+  .bill-scrawl::before { content: "↑ "; }
+
+  .gdp-callout {
+    margin-top: 32px;
+    padding: 24px;
+    border: 3px dashed var(--ink);
+    background: var(--hivis-2);
+  }
+  .gdp-callout .big-pct {
+    font-family: 'Bowlby One', sans-serif;
+    font-size: clamp(72px, 10vw, 140px);
+    line-height: 0.85;
+  }
+  .gdp-callout .pct-cap { font-size: 16px; max-width: 30ch; margin-top: 8px; }
+
+  /* ---------- chapter 4: trusts ---------- */
+  .trust-hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: center;
+    margin-top: 32px;
+  }
+  .trust-num {
+    font-family: 'Bowlby One', sans-serif;
+    font-size: clamp(110px, 18vw, 260px);
+    line-height: 0.85;
+    color: var(--ink);
+    position: relative;
+    display: inline-block;
+  }
+  .trust-num .b { color: var(--hivis); }
+  .trust-num::after {
+    content: "billion";
+    display: block;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 0.2em;
+    margin-top: 8px;
+    font-weight: 400;
+    color: var(--ink-soft);
+  }
+
+  .trust-facts { font-size: 18px; line-height: 1.55; }
+  .trust-facts p { margin-bottom: 18px; }
+  .trust-facts .hi { background: var(--hivis-2); padding: 0 4px; }
+
+  .trust-perc-list {
+    margin-top: 56px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  .trust-perc-list .stat {
+    border-top: 4px solid var(--ink);
+    padding-top: 18px;
+  }
+  .trust-perc-list .stat .num {
+    font-family: 'Bowlby One', sans-serif;
+    font-size: clamp(48px, 5vw, 72px);
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+  .trust-perc-list .stat .num .units { font-size: 0.4em; vertical-align: super; margin-left: 4px; color: var(--hivis); }
+  .trust-perc-list .stat p { font-size: 15px; line-height: 1.4; }
+
+  /* ---------- chapter 5: tax ---------- */
+  .tax-vs {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 24px;
+    align-items: center;
+    margin-top: 48px;
+  }
+  .tax-card {
+    padding: 32px;
+    border: 2px solid var(--ink);
+    text-align: center;
+    position: relative;
+  }
+  .tax-card.you { background: var(--paper-dark); }
+  .tax-card.them { background: var(--ink); color: var(--paper); }
+  .tax-card .who {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    margin-bottom: 12px;
+    opacity: 0.7;
+  }
+  .tax-card .rate {
+    font-family: 'Bowlby One', sans-serif;
+    font-size: clamp(64px, 10vw, 130px);
+    line-height: 0.9;
+  }
+  .tax-card.them .rate { color: var(--hivis); }
+  .tax-card .rate .pct { font-size: 0.5em; vertical-align: super; }
+  .tax-card .desc { font-size: 14px; max-width: 30ch; margin: 12px auto 0; line-height: 1.3; }
+  .vs-divider {
+    font-family: 'Bowlby One', sans-serif;
+    font-size: clamp(40px, 5vw, 80px);
+    color: var(--hivis);
+    transform: rotate(-4deg);
+  }
+
+  .tax-note {
+    margin-top: 32px;
+    font-family: 'Caveat', cursive;
+    font-size: 26px;
+    text-align: center;
+    transform: rotate(-1deg);
+    color: var(--teal);
+  }
+
+  /* ---------- chapter 6: meanwhile ---------- */
+  .meanwhile {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .meanwhile h2 { color: var(--paper); }
+  .meanwhile h2 .accent { color: var(--hivis-2); }
+  .meanwhile h2 .underline { background: linear-gradient(transparent 65%, var(--hivis) 65%); }
+  .meanwhile .lede { color: rgba(241,234,214,0.85); }
+
+  .grim-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 32px;
+    margin-top: 48px;
+  }
+  .grim-stat {
+    border-top: 2px solid var(--paper);
+    padding-top: 18px;
+    min-width: 0; /* allow grid track to constrain content */
+  }
+  .grim-stat .num {
+    font-family: 'Bowlby One', sans-serif;
+    font-size: clamp(48px, 5vw, 72px);
+    line-height: 0.95;
+    color: var(--hivis-2);
+    overflow-wrap: break-word;
+    word-break: normal;
+    hyphens: none;
+  }
+  .grim-stat .num .small { font-size: 0.4em; color: var(--paper); }
+  .grim-stat p { font-size: 15px; line-height: 1.4; margin-top: 12px; opacity: 0.85; }
+
+  /* ---------- chapter 7: quote ---------- */
+  .quote-callout {
+    margin-top: 48px;
+    padding: 48px;
+    border-left: 8px solid var(--hivis);
+    background: var(--paper-dark);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: clamp(22px, 2.6vw, 36px);
+    line-height: 1.3;
+    max-width: 80ch;
+  }
+  .quote-callout .who {
+    font-style: normal;
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    margin-top: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-soft);
+  }
+
+  /* ---------- footer ---------- */
+  footer {
+    padding: 64px 6vw 96px;
+    background: var(--paper-dark);
+    border-top: 3px double var(--ink);
+  }
+  footer h3 {
+    font-family: 'Bowlby One', sans-serif;
+    font-size: 32px;
+    margin-bottom: 24px;
+  }
+  .sources {
+    columns: 2;
+    column-gap: 48px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .sources li {
+    break-inside: avoid;
+    margin-bottom: 10px;
+    list-style: none;
+    padding-left: 16px;
+    position: relative;
+  }
+  .sources li::before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    color: var(--hivis);
+  }
+  .sources a { color: var(--ink); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  .sources a:hover { color: var(--hivis); }
+
+  .colophon {
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--rule);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--ink-soft);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  /* ---------- responsive: tablet ---------- */
+  @media (max-width: 900px) {
+    .bill-stack { grid-template-columns: 1fr; gap: 40px; }
+    .trust-hero { grid-template-columns: 1fr; gap: 24px; }
+    .trust-perc-list { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* ---------- responsive: mobile ---------- */
+  @media (max-width: 640px) {
+    html { -webkit-text-size-adjust: 100%; }
+    body { line-height: 1.45; }
+
+    .masthead {
+      padding: 10px 18px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+    .masthead .left, .masthead .right { font-size: 10px; letter-spacing: 0.1em; }
+
+    .hero { padding: 36px 22px 56px; }
+    .sticker { display: none; }
+    .kicker { font-size: 10px; padding: 5px 9px; margin-bottom: 20px; letter-spacing: 0.15em; }
+    h1.title {
+      font-size: clamp(52px, 16vw, 96px);
+      line-height: 0.92;
+      letter-spacing: -0.03em;
+      margin-bottom: 20px;
+      word-break: break-word;
+    }
+    h1.title .strike { text-decoration-thickness: 4px; }
+    .dek { font-size: 17px; line-height: 1.4; }
+    .hero-meta { gap: 14px; margin-top: 28px; font-size: 11px; }
+    .hero-meta span { padding-left: 8px; border-left-width: 2px; }
+
+    section.chapter { padding: 56px 22px; }
+    .chapter-no { font-size: 10px; letter-spacing: 0.2em; }
+    h2 {
+      font-size: clamp(34px, 9vw, 52px);
+      line-height: 1;
+      letter-spacing: -0.015em;
+      max-width: none;
+      margin-bottom: 20px;
+    }
+    h2 .underline { padding: 0 2px; }
+    .lede { font-size: 16px; margin-bottom: 32px; line-height: 1.45; }
+
+    .split-grid { grid-template-columns: 1fr; }
+    .split-grid > div { padding: 24px 20px; }
+    .split-grid .bottom40 { border-left: none; border-top: 2px solid var(--ink); }
+    .split-num { font-size: 84px; }
+    .split-desc { font-size: 16px; }
+
+    .dots-wrap { margin-top: 40px; padding: 20px; }
+    .dots-title { font-size: 11px; letter-spacing: 0.1em; margin-bottom: 14px; }
+    .dots { grid-template-columns: repeat(10, 1fr); gap: 6px; margin-bottom: 14px; }
+    .dots-caption { font-size: 11px; gap: 12px; flex-direction: column; }
+
+    /* Chart.js panels — slimmer padding on mobile */
+    .chartjs-panel { padding: 22px 16px 20px; }
+    .chartjs-panel .panel-title { font-size: 10px; letter-spacing: 0.15em; }
+    .chartjs-panel .panel-sub { font-size: 10px; margin-bottom: 16px; }
+    .chartjs-footnote { font-size: 11px; padding-top: 12px; margin-top: 14px; line-height: 1.45; }
+
+    .bill-stack { gap: 32px; }
+    .bill-stack .left h3 { font-size: 24px; line-height: 1.05; margin-bottom: 14px; }
+    .bill-stack .left p { font-size: 16px; margin-bottom: 14px; }
+
+    .bill-scrawl { font-size: 22px; margin-top: 16px; }
+
+    .gdp-callout { padding: 20px; margin-top: 0; }
+    .gdp-callout .big-pct { font-size: 92px; }
+    .gdp-callout .pct-cap { font-size: 14px; }
+
+    .trust-hero { gap: 16px; margin-top: 20px; }
+    .trust-num { font-size: clamp(96px, 30vw, 140px); line-height: 0.85; }
+    .trust-num::after { font-size: 0.22em; margin-top: 4px; }
+    .trust-facts { font-size: 16px; line-height: 1.5; }
+    .trust-facts p { margin-bottom: 14px; }
+    .trust-perc-list {
+      grid-template-columns: 1fr;
+      margin-top: 40px;
+      gap: 20px;
+    }
+    .trust-perc-list .stat { padding-top: 14px; border-top-width: 3px; }
+    .trust-perc-list .stat .num { font-size: 56px; margin-bottom: 8px; }
+    .trust-perc-list .stat p { font-size: 14px; }
+
+    .tax-vs {
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-top: 32px;
+    }
+    .tax-card { padding: 24px 20px; }
+    .tax-card .rate { font-size: 84px; }
+    .tax-card .who { font-size: 10px; margin-bottom: 8px; }
+    .tax-card .desc { font-size: 13px; }
+    .vs-divider {
+      transform: rotate(0);
+      text-align: center;
+      font-size: 36px;
+      padding: 4px 0;
+    }
+    .tax-note { font-size: 20px; margin-top: 24px; }
+
+    .grim-grid {
+      grid-template-columns: 1fr;
+      gap: 24px;
+      margin-top: 32px;
+    }
+    .grim-stat { padding-top: 14px; }
+    .grim-stat .num { font-size: 56px; }
+    .grim-stat p { font-size: 14px; margin-top: 8px; }
+
+    .quote-callout {
+      padding: 24px 20px;
+      border-left-width: 6px;
+      font-size: 18px;
+      margin-top: 32px;
+    }
+    .quote-callout .who { font-size: 11px; letter-spacing: 0.08em; margin-top: 12px; }
+
+    footer { padding: 48px 22px 64px; }
+    footer h3 { font-size: 26px; margin-bottom: 16px; }
+    .sources { columns: 1; font-size: 12px; }
+    .sources li { margin-bottom: 12px; padding-left: 14px; }
+    .colophon {
+      margin-top: 32px;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+    }
+  }
+
+  /* extra-narrow phones */
+  @media (max-width: 380px) {
+    .hero { padding: 32px 16px 48px; }
+    section.chapter { padding: 48px 16px; }
+    footer { padding: 40px 16px 56px; }
+    .masthead { padding: 10px 16px; }
+    h1.title { font-size: 48px; }
+    .split-num { font-size: 72px; }
+    .trust-num { font-size: 92px; }
+    .gdp-callout .big-pct { font-size: 76px; }
+    .tax-card .rate { font-size: 72px; }
+  }
+
+  /* entrance animations */
+  .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.8s ease, transform 0.8s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="left">Issue 01 · Aotearoa, 2026</div>
+  <div class="right"><span>Made with public stats &amp; mild rage</span></div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <span class="kicker">A receipt for the 'rockstar economy'</span>
+  <h1 class="title">
+    She'll be<br>
+    <span class="strike">right</span> <span class="em">rich.</span><br>
+    <span class="wonk">(For some of us.)</span>
+  </h1>
+  <p class="dek">
+    A scrolling audit of who actually owns Aotearoa — built entirely on
+    <em>official numbers</em> from Stats NZ, IRD and the NBR Rich List. No vibes. No
+    "trust me bro." Just receipts, with a bit of cheek.
+  </p>
+  <div class="hero-meta">
+    <span>Sources: Stats NZ Household Net&nbsp;Worth 2024</span>
+    <span>IRD High-Wealth Individuals Research Project 2023</span>
+    <span>NBR Rich List 2025</span>
+  </div>
+
+  <div class="sticker">
+    <span>You are<br>probably in the</span>
+    <span class="big">80%</span>
+    <span>that owns<br>⅓ of NZ</span>
+  </div>
+</section>
+
+<!-- CH 1: THE SPLIT -->
+<section class="chapter" id="split">
+  <div class="chapter-no">Chapter 01 / The Split</div>
+  <h2>Two-thirds of <span class="underline">everything</span> belongs to one-fifth of us.</h2>
+  <p class="lede">
+    Stats NZ measures household net worth every three years. The latest survey
+    (year ended June 2024) is unambiguous: the wealthiest 20% of households hold
+    <strong>roughly two-thirds</strong> of all household wealth in New Zealand.
+    The bottom 40% hold so little it barely registers on a chart.
+  </p>
+
+  <div class="split-grid">
+    <div class="top20">
+      <div class="split-num">66%</div>
+      <div class="split-label">Held by the top 20% of households</div>
+      <p class="split-desc">Median net worth of this group: <strong>$2,400,000</strong>. Up 19% in three years.</p>
+    </div>
+    <div class="bottom40">
+      <div class="split-num">≈ 2%</div>
+      <div class="split-label">Held by the bottom 50% of households</div>
+      <p class="split-desc">Every survey since 2015 has shown the poorest <em>half</em> of NZ owning roughly 2% of the wealth. Every. Single. One.</p>
+    </div>
+  </div>
+
+  <div class="dots-wrap">
+    <div class="dots-title">⌖ 100 dots = 100 households · red = top 20%</div>
+    <div class="dots" id="dotgrid"></div>
+    <div class="dots-caption">
+      <span><span class="swatch" style="background:var(--hivis)"></span>20 households (top-left block) own ~⅔ of everything</span>
+      <span><span class="swatch" style="background:rgba(241,234,214,0.18)"></span>The other 80 share what's left</span>
+    </div>
+  </div>
+</section>
+
+<!-- CH 2: THE GAP IS WIDENING -->
+<section class="chapter" id="gap">
+  <div class="chapter-no">Chapter 02 / The Gap</div>
+  <h2>In one decade, the gap grew by <span class="accent">over a million dollars.</span></h2>
+  <p class="lede">
+    Between 2015 and 2024, a typical household in the poorest fifth went from
+    $8,000 in net worth to $11,000 — a gain of three grand. A typical household
+    in the wealthiest fifth went from $1.32m to $2.41m — a gain of over a
+    million. Both groups got "richer." Slightly different scales.
+  </p>
+
+  <!-- primer: what's a quintile? what's a median? -->
+  <div class="primer">
+    <div class="card">
+      <div class="label">First, two quick words</div>
+      <h4>What's a "quintile"?</h4>
+      <p>
+        Stats NZ takes every household in the country, sorts them from poorest
+        to richest, then chops the line into five equal groups of about
+        <strong>400,000 households each</strong>. Each group is a quintile.
+        Q1 is the poorest fifth. Q5 is the wealthiest fifth.
+      </p>
+    </div>
+    <div class="card">
+      <div class="label">And…</div>
+      <h4>What's a "median"?</h4>
+      <p>
+        The middle household in that group. Half above, half below.
+        We use medians because <strong>averages get yanked sky-high by
+        billionaires</strong> — the national mean is $1.04m, but the median is
+        only $529k. The median is what a typical Kiwi actually has.
+      </p>
+    </div>
+  </div>
+
+  <!-- quintile chart (Chart.js) -->
+  <div class="chartjs-panel">
+    <div class="panel-title">⌖ Median household net worth, by quintile · NZ 2024</div>
+    <div class="panel-sub">Each quintile = 1/5 of NZ households (about 400,000 of them). Bar shows what the middle household in that group is worth.</div>
+    <div class="chartjs-canvas-wrap" style="height: 480px;">
+      <canvas id="chart-quintiles"></canvas>
+    </div>
+    <div class="chartjs-footnote">
+      <strong>Q1 to Q5, $0 to $2.4 million.</strong> And the top of the top sits WAY higher than this — the Rich List starts at $100m and goes up from there. This chart literally can't fit them.
+    </div>
+  </div>
+</section>
+
+<!-- CH 3: BILLIONAIRES -->
+<section class="chapter" id="billionaires">
+  <div class="chapter-no">Chapter 03 / The 18</div>
+  <h2>NZ has <span class="accent">18 billionaires</span> — and a country that says "she'll be right."</h2>
+  <p class="lede">
+    The NBR Rich List 2025 profiled <strong>119 individuals and families</strong>
+    worth a combined <strong>$102.1 billion</strong>. That's more than 40% of
+    the entire country's annual GDP, concentrated in fewer than 120 households.
+    Eighteen of them are billionaires. Up from 16 the year before. Cost-of-living
+    crisis. Two recessions in 18 months. Just casually.
+  </p>
+
+  <div class="bill-stack">
+    <div class="left">
+      <h3>The Mowbray brothers alone are worth $20,000,000,000.</h3>
+      <p>
+        That's the entire 2024 budget of Te Whatu Ora's national hospital
+        operating spend (roughly). For two blokes who started a toy company.
+        Good on them. <em>Probably</em> shouldn't be possible in a country of 5.3 million people without something being a bit broken.
+      </p>
+
+      <div class="chartjs-panel">
+        <div class="panel-title">⌖ Top 5 by net worth, $NZ billion · NBR Rich List 2025</div>
+        <div class="chartjs-canvas-wrap" style="height: 360px;">
+          <canvas id="chart-billionaires"></canvas>
+        </div>
+        <div class="chartjs-footnote">
+          The Mowbray brothers' bar isn't a typo — they really are worth nearly twice what the next-richest Kiwi is. And there are 13 more billionaires below this chart.
+        </div>
+      </div>
+
+      <p class="bill-scrawl">that's the chart, not a typo. one bar really is that tall.</p>
+    </div>
+
+    <div class="right">
+      <div class="gdp-callout">
+        <div style="font-family: 'DM Mono', monospace; font-size: 13px; text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 8px;">119 families' wealth =</div>
+        <div class="big-pct">40%+</div>
+        <div class="pct-cap"><strong>of NZ's entire annual GDP.</strong> A country, basically, in 119 wallets.</div>
+      </div>
+
+      <div style="margin-top: 32px; font-family: 'Caveat', cursive; font-size: 22px; line-height: 1.2; color: var(--teal); transform: rotate(-1deg);">
+        ps: in 2016 the same list totalled $60b. So it's nearly doubled in less than a decade. Tough times.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CH 4: TRUSTS -->
+<section class="chapter" id="trusts">
+  <div class="chapter-no">Chapter 04 / The Trust Loophole</div>
+  <h2>$408,000,000,000 is parked in <span class="underline">family trusts.</span></h2>
+
+  <div class="trust-hero">
+    <div class="trust-num">
+      $408<span class="b">b</span>
+    </div>
+    <div class="trust-facts">
+      <p>
+        That's <strong>17% of every asset every household in NZ owns</strong>, sitting in trusts — combined financial and non-financial equity, per Stats NZ.
+      </p>
+      <p>
+        <span class="hi">Only 9% of households actually have one.</span> Funny that.
+      </p>
+      <p>
+        Trust holders have an average net worth of <strong>$2.4 million</strong> — roughly five times the national median household ($529,000).
+      </p>
+      <p>
+        Estimates put the number of trusts in NZ at <strong>300,000 to 500,000</strong>. That's the highest rate per capita in the world. We're a nation of five million people running roughly one trust for every twelve of us. Suspicious!
+      </p>
+    </div>
+  </div>
+
+  <div class="trust-perc-list">
+    <div class="stat">
+      <div class="num">9<span class="units">%</span></div>
+      <p>Share of NZ households that have a family trust. They hold <strong>17%</strong> of all household wealth.</p>
+    </div>
+    <div class="stat">
+      <div class="num">$408<span class="units">b</span></div>
+      <p>Total household wealth sitting in family trusts (Stats NZ, 2024).</p>
+    </div>
+    <div class="stat">
+      <div class="num">80<span class="units">%</span></div>
+      <p>Share of <em>all trust income</em> in NZ that comes from just <strong>5%</strong> of trusts. (IRD, 2021 tax year.)</p>
+    </div>
+  </div>
+</section>
+
+<!-- CH 5: THE TAX BIT -->
+<section class="chapter" id="tax">
+  <div class="chapter-no">Chapter 05 / The Tax Bit</div>
+  <h2>The 311 richest Kiwis paid a tax rate of <span class="accent">8.9%.</span></h2>
+  <p class="lede">
+    In 2023, Inland Revenue published its High-Wealth Individuals Research
+    Project. It looked at the actual finances of New Zealand's <strong>311 wealthiest</strong>
+    individuals. The result: only 7% of their income came in a form subject to
+    income tax. The other 93% was investment returns and capital gains — taxed
+    lightly or not at all. Effective rate: <strong>8.9%</strong>.
+  </p>
+
+  <div class="tax-vs">
+    <div class="tax-card you">
+      <div class="who">You — on the average wage</div>
+      <div class="rate">20<span class="pct">%</span></div>
+      <div class="desc">Effective tax rate on your salary, give or take. Because PAYE doesn't play.</div>
+    </div>
+    <div class="vs-divider">vs.</div>
+    <div class="tax-card them">
+      <div class="who">NZ's 311 wealthiest individuals</div>
+      <div class="rate">8.9<span class="pct">%</span></div>
+      <div class="desc">Per Inland Revenue. Less than half what you pay. On the form they fill out themselves.</div>
+    </div>
+  </div>
+
+  <p class="tax-note">
+    Until very recently, NZ &amp; Belgium were the only two OECD countries without a capital gains tax. Belgium at least had other wealth taxes. We had neither. Bold strategy, Cotton.
+  </p>
+</section>
+
+<!-- CH 6: MEANWHILE -->
+<section class="chapter meanwhile" id="meanwhile">
+  <div class="chapter-no" style="color: rgba(241,234,214,0.6)">Chapter 06 / Meanwhile</div>
+  <h2>Meanwhile, in the country those <span class="underline">119 families</span> share with us…</h2>
+  <p class="lede">
+    These are also official Stats NZ numbers. From the same year. The same country.
+  </p>
+
+  <div class="grim-grid">
+    <div class="grim-stat">
+      <div class="num">156,600</div>
+      <p>Children living in material hardship (year ended June 2024). That's 13.4% of all kids in NZ. The government missed its own poverty-reduction targets.</p>
+    </div>
+    <div class="grim-stat">
+      <div class="num">208,000</div>
+      <p>Children in households below 50% of the national median income, after housing costs. 17.7% of all kids.</p>
+    </div>
+    <div class="grim-stat">
+      <div class="num">27<span class="small">%</span></div>
+      <p>Share of NZ children living in households where food runs out due to cost (Salvation Army, 2024). NZ exports enough food to feed 40 million people.</p>
+    </div>
+    <div class="grim-stat">
+      <div class="num">109,000</div>
+      <p>Households with negative net worth — they owe more than they own. That's about 5.4% of all households in NZ.</p>
+    </div>
+    <div class="grim-stat">
+      <div class="num">$11,000</div>
+      <p>Median net worth of the poorest 20% of NZ households. The richest 20% sit on a median $2.4 million.</p>
+    </div>
+    <div class="grim-stat">
+      <div class="num">$0.88</div>
+      <p>Increase in the price of 2L of milk since December 2023. Cheese is up 26%. Butter, 32%. Real "tighten your belt" energy.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CH 7: THE PUNCHLINE -->
+<section class="chapter" id="quote">
+  <div class="chapter-no">Chapter 07 / The Punchline</div>
+  <h2>Two things are true at once.</h2>
+  <p class="lede">
+    Aotearoa is one of the most prosperous nations on the planet by GDP per capita.
+    It's also a place where the median wealth of the poorest fifth of households is
+    less than the cost of a second-hand Toyota — while 119 families pile up $102
+    billion and 311 of the wealthiest people pay tax at less than half the rate of
+    a checkout worker. Both of these facts come from the government's own ledger.
+  </p>
+
+  <div class="quote-callout">
+    "In the year ended June 2024, the wealthiest 20 percent of households held approximately two-thirds of New Zealand's total household net worth. This reflects an uneven distribution of wealth in the country."
+    <div class="who">— Chris Pooch, Stats NZ household financial statistics spokesperson, September 2025</div>
+  </div>
+
+  <p style="margin-top: 48px; font-family: 'Caveat', cursive; font-size: clamp(28px, 4vw, 56px); line-height: 1.1; color: var(--hivis); transform: rotate(-1.5deg); max-width: 24ch;">
+    You can be proud of this country and also expect better from it. Both buttons can be pressed at once.
+  </p>
+</section>
+
+<!-- FOOTER / SOURCES -->
+<footer>
+  <h3>Receipts.</h3>
+  <p style="font-family: 'DM Mono', monospace; font-size: 13px; margin-bottom: 24px; max-width: 70ch;">
+    Every number above is sourced from a publicly available, government or
+    well-regarded outlet. Click through and check. That's the whole point.
+  </p>
+  <ul class="sources">
+    <li><a href="https://www.stats.govt.nz/information-releases/household-net-worth-statistics-year-ended-june-2024/" target="_blank" rel="noopener">Stats NZ — Household Net Worth Statistics: Year ended June 2024</a></li>
+    <li><a href="https://www.stats.govt.nz/news/household-net-worth-increases-wealth-distribution-remains-unchanged/" target="_blank" rel="noopener">Stats NZ — Household net worth increases, wealth distribution remains unchanged (2025)</a></li>
+    <li><a href="https://www.stats.govt.nz/information-releases/child-poverty-statistics-year-ended-june-2024/" target="_blank" rel="noopener">Stats NZ — Child Poverty Statistics: Year ended June 2024</a></li>
+    <li><a href="https://www.rnz.co.nz/news/business/574236/feeling-wealthier-here-s-how-much-household-net-worth-has-lifted" target="_blank" rel="noopener">RNZ — Feeling wealthier? How household net worth has lifted (Sep 2025)</a></li>
+    <li><a href="https://www.rnz.co.nz/news/national/563529/new-zealand-s-rich-listers-climb-above-100-billion-despite-tough-times" target="_blank" rel="noopener">RNZ — NZ Rich Listers climb above $100 billion (June 2025)</a></li>
+    <li><a href="https://www.nzherald.co.nz/business/nbr-rich-list-who-are-the-wealthiest-people-in-new-zealand/OGJYGB3NMVH3DFHAKXRA5YNZZ4/" target="_blank" rel="noopener">NZ Herald — NBR Rich List: Who are the wealthiest people in NZ? (2025)</a></li>
+    <li><a href="https://www.closingthegap.org.nz/post/inequality-rises" target="_blank" rel="noopener">Income Equality Project — Inequality Rising (Nov 2025)</a></li>
+    <li><a href="https://www.ird.govt.nz/about-us/tax-statistics/research-and-evaluation/high-wealth-individuals-research-project" target="_blank" rel="noopener">Inland Revenue — High-Wealth Individuals Research Project (2023)</a></li>
+    <li><a href="https://www.moneyhub.co.nz/household-wealth-statistics.html" target="_blank" rel="noopener">MoneyHub — NZ Household Wealth &amp; Inequality Statistics (compiled 2024 data)</a></li>
+    <li><a href="https://figure.nz/chart/yEzCBjFvbv75BdN2-3QdW1qU1kREAIQ0z" target="_blank" rel="noopener">Figure.NZ — Total value of household assets by type (Stats NZ data)</a></li>
+    <li><a href="https://www.manamokopuna.org.nz/publications/media-releases/were-failing-on-child-poverty-reduction-but-its-not-too-late-for-action/" target="_blank" rel="noopener">Mana Mokopuna — On child poverty reduction (2025)</a></li>
+    <li><a href="https://www.democracyproject.org.nz/p/integrity-briefing-the-2025-nbr-rich" target="_blank" rel="noopener">The Democracy Project — Integrity Briefing on the 2025 NBR Rich List</a></li>
+  </ul>
+
+  <div class="colophon">
+    <div>An angry-but-polite infographic · Aotearoa · 2026</div>
+    <div>No vibes were used in the making of this site</div>
+  </div>
+</footer>
+
+<script>
+  /* ============================================================
+     CH 1 — 100-dot wealth distribution grid
+     20 'rich' dots form a clean block in the top-left.
+     Adapts to a 10-col layout on mobile.
+     ============================================================ */
+  const dotGrid = document.getElementById('dotgrid');
+  function buildDotGrid() {
+    const isMobile = window.matchMedia('(max-width: 640px)').matches;
+    const cols     = isMobile ? 10 : 20;
+    const rows     = isMobile ? 10 : 5;
+    const richCols = isMobile ? 2  : 4;
+    dotGrid.innerHTML = '';
+    for (let i = 0; i < cols * rows; i++) {
+      const col = i % cols;
+      const isRich = col < richCols;
+      const d = document.createElement('div');
+      d.className = 'dot' + (isRich ? ' rich' : '');
+      dotGrid.appendChild(d);
+    }
+  }
+  buildDotGrid();
+
+  /* ============================================================
+     CH 2 + CH 3 — Chart.js charts
+     Themed to match the dark-panel aesthetic: paper-coloured axes,
+     DM Mono labels, low-opacity grid lines, palette-coloured bars.
+     ============================================================ */
+  const PAPER   = '#f1ead6';
+  const HIVIS   = '#ff3b1f';
+  const HIVIS_2 = '#ffd400';
+  const TEAL    = '#0e5e5b';
+  const INK     = '#181613';
+  const DIM     = 'rgba(241,234,214,0.55)';
+  const FAINT   = 'rgba(241,234,214,0.12)';
+
+  // Set Chart.js global defaults so every chart inherits the theme
+  Chart.defaults.font.family = "'DM Mono', ui-monospace, monospace";
+  Chart.defaults.font.size = 12;
+  Chart.defaults.color = PAPER;
+  Chart.defaults.borderColor = FAINT;
+
+  /* ---- a small inline plugin to draw bar values inside/outside each bar.
+     Chart.js core has no data-labels; this draws them in a consistent way
+     and styles them with the display font. ---- */
+  const dataLabelsPlugin = {
+    id: 'dataLabels',
+    afterDatasetsDraw(chart, args, opts) {
+      const { ctx } = chart;
+      const dataset = chart.data.datasets[0];
+      const meta = chart.getDatasetMeta(0);
+      const isHorizontal = chart.options.indexAxis === 'y';
+
+      meta.data.forEach((bar, i) => {
+        const value = dataset.data[i];
+        const formatted = opts.formatter ? opts.formatter(value) : value;
+        ctx.save();
+        ctx.font = "700 14px 'Bowlby One', sans-serif";
+        ctx.fillStyle = opts.color || PAPER;
+        ctx.textBaseline = 'middle';
+
+        if (isHorizontal) {
+          ctx.textAlign = 'left';
+          ctx.fillText(formatted, bar.x + 8, bar.y);
+        } else {
+          ctx.textAlign = 'center';
+          // For tall bars the label fits above; for tiny bars it would clip,
+          // so always sit above the bar's tip
+          ctx.fillText(formatted, bar.x, bar.y - 10);
+        }
+        ctx.restore();
+      });
+    }
+  };
+  Chart.register(dataLabelsPlugin);
+
+  /* ---- CH 2 — Quintile chart ---- */
+  const quintilesCanvas = document.getElementById('chart-quintiles');
+  if (quintilesCanvas) {
+    new Chart(quintilesCanvas, {
+      type: 'bar',
+      data: {
+        labels: [
+          ['Q1', 'Poorest fifth'],
+          ['Q2', 'Lower-middle'],
+          ['Q3', 'Middle'],
+          ['Q4', 'Upper-middle'],
+          ['Q5', 'Wealthiest fifth']
+        ],
+        datasets: [{
+          label: 'Median net worth',
+          data: [11000, 197000, 500000, 1000000, 2400000],
+          backgroundColor: [HIVIS, 'rgba(241,234,214,0.55)', TEAL, '#ff6448', HIVIS_2],
+          borderColor: INK,
+          borderWidth: 1,
+          borderRadius: 2,
+          maxBarThickness: 100
+        }]
+      },
+      options: {
+        indexAxis: 'x',
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: { padding: { top: 24, right: 8, bottom: 0, left: 0 } },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: INK,
+            titleColor: PAPER,
+            bodyColor: PAPER,
+            borderColor: HIVIS,
+            borderWidth: 1,
+            padding: 10,
+            titleFont: { family: "'Bowlby One', sans-serif", size: 14 },
+            bodyFont: { family: "'DM Mono', monospace", size: 12 },
+            callbacks: {
+              title: items => items[0].label.replace(',', ' · '),
+              label: ctx => 'Median: $' + ctx.parsed.y.toLocaleString('en-NZ')
+            }
+          },
+          dataLabels: {
+            color: PAPER,
+            formatter: v => '$' + (v >= 1000000 ? (v/1000000).toFixed(v >= 1000000 ? 2 : 1).replace(/\.?0+$/, '') + 'm' : (v/1000).toFixed(0) + 'k')
+          }
+        },
+        scales: {
+          x: {
+            ticks: { color: PAPER, font: { size: 11 } },
+            grid: { display: false },
+            border: { color: DIM }
+          },
+          y: {
+            beginAtZero: true,
+            max: 2600000,
+            ticks: {
+              color: 'rgba(241,234,214,0.6)',
+              font: { size: 11 },
+              callback: v => v === 0 ? '$0' : '$' + (v/1000000).toFixed(1).replace(/\.0$/, '') + 'm'
+            },
+            grid: { color: FAINT, drawTicks: false },
+            border: { color: DIM }
+          }
+        }
+      }
+    });
+  }
+
+  /* ---- CH 3 — Billionaires horizontal bar chart ---- */
+  const billionairesCanvas = document.getElementById('chart-billionaires');
+  if (billionairesCanvas) {
+    new Chart(billionairesCanvas, {
+      type: 'bar',
+      data: {
+        labels: [
+          'Mowbray brothers',
+          'Graeme Hart',
+          'Peter Jackson & Fran Walsh',
+          'Trevor Farmer',
+          'Lucy Liu'
+        ],
+        datasets: [{
+          label: 'Net worth ($NZ billion)',
+          data: [20.0, 12.1, 2.6, 1.2, 0.7],
+          backgroundColor: [HIVIS, TEAL, 'rgba(241,234,214,0.85)', 'rgba(241,234,214,0.7)', 'rgba(241,234,214,0.6)'],
+          borderColor: INK,
+          borderWidth: 1,
+          borderRadius: 2,
+          maxBarThickness: 36
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: { padding: { top: 4, right: 80, bottom: 4, left: 0 } },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: INK,
+            titleColor: PAPER,
+            bodyColor: PAPER,
+            borderColor: HIVIS,
+            borderWidth: 1,
+            padding: 10,
+            titleFont: { family: "'Bowlby One', sans-serif", size: 14 },
+            bodyFont: { family: "'DM Mono', monospace", size: 12 },
+            callbacks: {
+              label: ctx => '$' + ctx.parsed.x.toFixed(1) + ' billion'
+            }
+          },
+          dataLabels: {
+            color: HIVIS_2,
+            formatter: v => '$' + (v >= 1 ? v.toFixed(1) + 'b' : (v * 1000).toFixed(0) + 'm')
+          }
+        },
+        scales: {
+          x: {
+            beginAtZero: true,
+            max: 22,
+            ticks: {
+              color: 'rgba(241,234,214,0.6)',
+              font: { size: 11 },
+              callback: v => '$' + v + 'b'
+            },
+            grid: { color: FAINT, drawTicks: false },
+            border: { color: DIM }
+          },
+          y: {
+            ticks: {
+              color: PAPER,
+              font: { size: 12, family: "'DM Mono', monospace" }
+            },
+            grid: { display: false },
+            border: { color: DIM }
+          }
+        }
+      }
+    });
+  }
+
+  /* rebuild dot grid on resize (Chart.js handles its own resize) */
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      buildDotGrid();
+    }, 150);
+  });
+
+  /* ============================================================
+     Reveal-on-scroll
+     ============================================================ */
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) e.target.classList.add('visible');
+    });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.chapter, .hero').forEach(el => {
+    el.classList.add('reveal');
+    observer.observe(el);
+  });
+</script>
+
+</body>
+</html>
