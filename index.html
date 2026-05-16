@@ -13,1310 +13,9 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=DM+Mono:wght@400;500&family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..900,0..100,0..1&family=Caveat:wght@500;700&display=swap"
         rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
     <!-- Chart.js for the Chapter 2 + 3 data visualisations -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
-    <style>
-        :root {
-            --paper: #f1ead6;
-            --paper-dark: #e6dec5;
-            --ink: #181613;
-            --ink-soft: #2a2620;
-            --chart-bg: #221e18;
-            /* dark panel for bar charts */
-            --chart-grid: rgba(241, 234, 214, 0.08);
-            --hivis: #ff3b1f;
-            --hivis-2: #ffd400;
-            --teal: #0e5e5b;
-            --rule: rgba(24, 22, 19, 0.15);
-            --rule-strong: rgba(24, 22, 19, 0.55);
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-        body {
-            font-family: 'Fraunces', Georgia, serif;
-            font-variation-settings: "SOFT" 30, "WONK" 0;
-            background: var(--paper);
-            color: var(--ink);
-            line-height: 1.5;
-            overflow-x: hidden;
-            background-image:
-                radial-gradient(rgba(24, 22, 19, 0.05) 1px, transparent 1px),
-                radial-gradient(rgba(24, 22, 19, 0.04) 1px, transparent 1px);
-            background-size: 3px 3px, 7px 7px;
-            background-position: 0 0, 1px 1px;
-        }
-
-        body::before {
-            content: "";
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            z-index: 999;
-            opacity: 0.35;
-            mix-blend-mode: multiply;
-            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.1  0 0 0 0 0.1  0 0 0 0 0.1  0 0 0 0 0.15 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-        }
-
-        .display {
-            font-family: 'Bowlby One', Impact, sans-serif;
-            letter-spacing: -0.01em;
-        }
-
-        .mono {
-            font-family: 'DM Mono', ui-monospace, monospace;
-        }
-
-        .scrawl {
-            font-family: 'Caveat', cursive;
-        }
-
-        /* ---------- masthead ---------- */
-        .masthead {
-            border-bottom: 3px double var(--ink);
-            padding: 16px 32px 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--paper);
-            position: sticky;
-            top: 0;
-            z-index: 50;
-        }
-
-        .masthead .left,
-        .masthead .right {
-            font-family: 'DM Mono', monospace;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.12em;
-        }
-
-        .masthead .right span {
-            padding: 2px 6px;
-            background: var(--ink);
-            color: var(--paper);
-        }
-
-        /* ---------- hero ---------- */
-        .hero {
-            padding: 60px 6vw 80px;
-            border-bottom: 1px solid var(--rule);
-            position: relative;
-        }
-
-        .kicker {
-            display: inline-block;
-            font-family: 'DM Mono', monospace;
-            font-size: 13px;
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
-            background: var(--ink);
-            color: var(--hivis-2);
-            padding: 6px 12px;
-            margin-bottom: 28px;
-            transform: rotate(-1deg);
-        }
-
-        h1.title {
-            font-family: 'Bowlby One', Impact, sans-serif;
-            font-size: clamp(64px, 12vw, 220px);
-            line-height: 0.88;
-            letter-spacing: -0.025em;
-            margin-bottom: 24px;
-        }
-
-        h1.title .em {
-            color: var(--hivis);
-            display: inline-block;
-        }
-
-        h1.title .strike {
-            text-decoration: line-through;
-            text-decoration-thickness: 6px;
-            text-decoration-color: var(--hivis);
-            opacity: 0.55;
-        }
-
-        h1.title .wonk {
-            font-variation-settings: "WONK" 1, "SOFT" 100;
-            font-family: 'Fraunces', serif;
-            font-weight: 900;
-            font-style: italic;
-        }
-
-        .dek {
-            font-family: 'Fraunces', serif;
-            font-size: clamp(20px, 2.4vw, 28px);
-            max-width: 900px;
-            line-height: 1.35;
-            margin-top: 12px;
-            font-weight: 400;
-        }
-
-        .dek em {
-            font-style: italic;
-            color: var(--teal);
-        }
-
-        .hero-meta {
-            margin-top: 40px;
-            display: flex;
-            gap: 24px;
-            flex-wrap: wrap;
-            font-family: 'DM Mono', monospace;
-            font-size: 13px;
-            color: var(--ink-soft);
-        }
-
-        .hero-meta span {
-            border-left: 3px solid var(--hivis);
-            padding-left: 10px;
-        }
-
-        /* sticker */
-        .sticker {
-            position: absolute;
-            top: 80px;
-            right: 5vw;
-            width: 180px;
-            height: 180px;
-            background: var(--hivis);
-            color: var(--paper);
-            border-radius: 50%;
-            display: grid;
-            place-items: center;
-            text-align: center;
-            font-family: 'Bowlby One', sans-serif;
-            font-size: 14px;
-            line-height: 1.1;
-            padding: 18px;
-            transform: rotate(12deg);
-            box-shadow: 6px 6px 0 var(--ink);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .sticker span {
-            display: block;
-        }
-
-        .sticker .big {
-            font-size: 48px;
-            line-height: 1;
-            margin: 6px 0;
-        }
-
-        /* ---------- sections ---------- */
-        section.chapter {
-            padding: 96px 6vw;
-            border-bottom: 1px solid var(--rule);
-            position: relative;
-        }
-
-        .chapter-no {
-            font-family: 'DM Mono', monospace;
-            font-size: 12px;
-            letter-spacing: 0.3em;
-            text-transform: uppercase;
-            color: var(--ink-soft);
-            margin-bottom: 12px;
-        }
-
-        .chapter-no::before {
-            content: "§ ";
-            color: var(--hivis);
-        }
-
-        h2 {
-            font-family: 'Bowlby One', sans-serif;
-            font-size: clamp(40px, 6vw, 88px);
-            line-height: 0.95;
-            letter-spacing: -0.02em;
-            margin-bottom: 24px;
-            max-width: 18ch;
-        }
-
-        h2 .accent {
-            color: var(--hivis);
-        }
-
-        h2 .underline {
-            background: linear-gradient(transparent 65%, var(--hivis-2) 65%);
-            padding: 0 4px;
-        }
-
-        .lede {
-            font-size: clamp(18px, 1.6vw, 22px);
-            max-width: 64ch;
-            margin-bottom: 48px;
-            line-height: 1.45;
-        }
-
-        /* ---------- chapter 1: the split ---------- */
-        .split-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0;
-            margin-top: 32px;
-            border: 2px solid var(--ink);
-        }
-
-        .split-grid>div {
-            padding: 32px;
-            position: relative;
-        }
-
-        .split-grid .top20 {
-            background: var(--ink);
-            color: var(--paper);
-        }
-
-        .split-grid .bottom40 {
-            background: var(--paper-dark);
-            border-left: 2px solid var(--ink);
-        }
-
-        .split-num {
-            font-family: 'Bowlby One', sans-serif;
-            font-size: clamp(56px, 9vw, 140px);
-            line-height: 0.85;
-            margin-bottom: 8px;
-        }
-
-        .top20 .split-num {
-            color: var(--hivis-2);
-        }
-
-        .bottom40 .split-num {
-            color: var(--ink);
-        }
-
-        .split-label {
-            font-family: 'DM Mono', monospace;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.2em;
-            margin-bottom: 16px;
-            opacity: 0.7;
-        }
-
-        .split-desc {
-            font-size: 18px;
-            line-height: 1.4;
-        }
-
-        /* dots visualisation — now on a dark panel for consistency with charts */
-        .dots-wrap {
-            margin-top: 64px;
-            padding: 32px;
-            background: var(--chart-bg);
-            color: var(--paper);
-            border: 2px solid var(--ink);
-        }
-
-        .dots-title {
-            font-family: 'DM Mono', monospace;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.15em;
-            margin-bottom: 16px;
-            color: var(--paper);
-        }
-
-        .dots {
-            display: grid;
-            grid-template-columns: repeat(20, 1fr);
-            gap: 4px;
-            margin-bottom: 16px;
-        }
-
-        .dot {
-            aspect-ratio: 1;
-            border-radius: 50%;
-            background: rgba(241, 234, 214, 0.18);
-            /* faint paper-tone on dark bg */
-        }
-
-        .dot.rich {
-            background: var(--hivis);
-        }
-
-        .dots-caption {
-            font-family: 'DM Mono', monospace;
-            font-size: 12px;
-            color: rgba(241, 234, 214, 0.7);
-            display: flex;
-            gap: 24px;
-            flex-wrap: wrap;
-        }
-
-        .dots-caption .swatch {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            vertical-align: middle;
-            margin-right: 6px;
-        }
-
-        /* ---------- chapter 1: side-by-side panel (dots + wealth doughnut) ---------- */
-        .dots-wrap {
-            /* override existing single-column layout to a two-column split panel */
-            display: grid;
-            grid-template-columns: 1fr auto 1fr;
-            gap: 28px;
-            align-items: center;
-        }
-
-        .dots-wrap>.dots-col,
-        .dots-wrap>.wealth-col {
-            min-width: 0;
-            /* lets grid track constrain content */
-        }
-
-        .dots-wrap .dots-title {
-            margin-bottom: 14px;
-        }
-
-        /* the connector phrase between the two columns */
-        .dots-vs {
-            font-family: 'Caveat', cursive;
-            font-size: 22px;
-            line-height: 1.15;
-            color: var(--hivis);
-            text-align: center;
-            max-width: 12ch;
-            transform: rotate(-3deg);
-        }
-
-        .dots-vs::after {
-            content: " →";
-        }
-
-        /* the wealth doughnut column */
-        .wealth-col .wealth-title {
-            font-family: 'DM Mono', monospace;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.15em;
-            margin-bottom: 14px;
-            color: var(--paper);
-        }
-
-        .wealth-canvas-wrap {
-            position: relative;
-            width: 100%;
-            max-width: 280px;
-            margin: 0 auto;
-            aspect-ratio: 1 / 1;
-        }
-
-        .wealth-center {
-            position: absolute;
-            inset: 0;
-            display: grid;
-            place-items: center;
-            text-align: center;
-            pointer-events: none;
-        }
-
-        .wealth-center .big {
-            font-family: 'Bowlby One', sans-serif;
-            font-size: clamp(36px, 5vw, 56px);
-            line-height: 0.9;
-            color: var(--hivis);
-        }
-
-        .wealth-center .small {
-            font-family: 'DM Mono', monospace;
-            font-size: 10px;
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            color: rgba(241, 234, 214, 0.7);
-            margin-top: 6px;
-            /* max-width: 22ch; */
-            line-height: 1.25;
-        }
-
-        .wealth-col .wealth-caption {
-            font-family: 'DM Mono', monospace;
-            font-size: 11px;
-            color: rgba(241, 234, 214, 0.6);
-            text-align: center;
-            margin-top: 14px;
-            line-height: 1.4;
-        }
-
-        /* mobile: stack the three columns vertically */
-        @media (max-width: 800px) {
-            .dots-wrap {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-
-            .dots-vs {
-                transform: rotate(0);
-                max-width: none;
-                font-size: 20px;
-            }
-
-            .dots-vs::after {
-                content: " ↓";
-            }
-
-            .wealth-canvas-wrap {
-                max-width: 220px;
-            }
-
-            .wealth-center .small {
-                 max-width: 14ch;
-            }
-        }
-
-        /* ---------- chapter 2: primer cards ---------- */
-        .primer {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px;
-            margin-top: 24px;
-            margin-bottom: 8px;
-        }
-
-        .primer .card {
-            background: var(--paper-dark);
-            border: 2px solid var(--ink);
-            padding: 24px;
-        }
-
-        .primer .card .label {
-            font-family: 'DM Mono', monospace;
-            font-size: 11px;
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
-            color: var(--hivis);
-            margin-bottom: 8px;
-        }
-
-        .primer .card h4 {
-            font-family: 'Bowlby One', sans-serif;
-            font-size: 22px;
-            line-height: 1;
-            margin-bottom: 10px;
-        }
-
-        .primer .card p {
-            font-size: 15px;
-            line-height: 1.45;
-        }
-
-        @media (max-width: 800px) {
-            .primer {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* ---------- chapter 3: billionaires bar chart on dark panel ---------- */
-        .bill-stack {
-            display: grid;
-            grid-template-columns: 1.2fr 1fr;
-            gap: 64px;
-            align-items: start;
-        }
-
-        .bill-stack .left h3 {
-            font-family: 'Bowlby One', sans-serif;
-            font-size: clamp(28px, 3vw, 40px);
-            line-height: 1;
-            margin-bottom: 18px;
-        }
-
-        .bill-stack .left p {
-            font-size: 18px;
-            line-height: 1.5;
-            margin-bottom: 18px;
-            max-width: 50ch;
-        }
-
-        /* ---------- unified Chart.js panel wrapper (used by ch2 + ch3) ---------- */
-        .chartjs-panel {
-            background: var(--chart-bg);
-            padding: 32px 28px 24px;
-            margin-top: 24px;
-            border: 2px solid var(--ink);
-            color: var(--paper);
-        }
-
-        .chartjs-panel .panel-title {
-            font-family: 'DM Mono', monospace;
-            font-size: 12px;
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
-            color: rgba(241, 234, 214, 0.6);
-            margin-bottom: 8px;
-        }
-
-        .chartjs-panel .panel-sub {
-            font-family: 'DM Mono', monospace;
-            font-size: 11px;
-            color: rgba(241, 234, 214, 0.45);
-            margin-bottom: 24px;
-            line-height: 1.4;
-        }
-
-        .chartjs-canvas-wrap {
-            position: relative;
-            width: 100%;
-        }
-
-        .chartjs-footnote {
-            margin-top: 20px;
-            padding-top: 16px;
-            border-top: 1px solid rgba(241, 234, 214, 0.18);
-            font-family: 'DM Mono', monospace;
-            font-size: 12px;
-            line-height: 1.5;
-            color: rgba(241, 234, 214, 0.7);
-            max-width: 70ch;
-        }
-
-        .chartjs-footnote strong {
-            color: var(--paper);
-            font-weight: 500;
-        }
-
-        .bill-scrawl {
-            font-family: 'Caveat', cursive;
-            font-size: 28px;
-            color: var(--hivis);
-            transform: rotate(-3deg);
-            margin-top: 20px;
-            line-height: 1.1;
-        }
-
-        .bill-scrawl::before {
-            content: "↑ ";
-        }
-
-        .gdp-callout {
-            margin-top: 32px;
-            padding: 24px;
-            border: 3px dashed var(--ink);
-            background: var(--hivis-2);
-        }
-
-        .gdp-callout .big-pct {
-            font-family: 'Bowlby One', sans-serif;
-            font-size: clamp(72px, 10vw, 140px);
-            line-height: 0.85;
-        }
-
-        .gdp-callout .pct-cap {
-            font-size: 16px;
-            max-width: 30ch;
-            margin-top: 8px;
-        }
-
-        /* ---------- chapter 4: trusts ---------- */
-        .trust-hero {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 48px;
-            align-items: center;
-            margin-top: 32px;
-        }
-
-        .trust-num {
-            font-family: 'Bowlby One', sans-serif;
-            font-size: clamp(110px, 18vw, 260px);
-            line-height: 0.85;
-            color: var(--ink);
-            position: relative;
-            display: inline-block;
-        }
-
-        .trust-num .b {
-            color: var(--hivis);
-        }
-
-        .trust-num::after {
-            content: "billion";
-            display: block;
-            font-family: 'Fraunces', serif;
-            font-style: italic;
-            font-size: 0.2em;
-            margin-top: 8px;
-            font-weight: 400;
-            color: var(--ink-soft);
-        }
-
-        .trust-facts {
-            font-size: 18px;
-            line-height: 1.55;
-        }
-
-        .trust-facts p {
-            margin-bottom: 18px;
-        }
-
-        .trust-facts .hi {
-            background: var(--hivis-2);
-            padding: 0 4px;
-        }
-
-        .trust-perc-list {
-            margin-top: 56px;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 24px;
-        }
-
-        .trust-perc-list .stat {
-            border-top: 4px solid var(--ink);
-            padding-top: 18px;
-        }
-
-        .trust-perc-list .stat .num {
-            font-family: 'Bowlby One', sans-serif;
-            font-size: clamp(48px, 5vw, 72px);
-            line-height: 1;
-            margin-bottom: 12px;
-        }
-
-        .trust-perc-list .stat .num .units {
-            font-size: 0.4em;
-            vertical-align: super;
-            margin-left: 4px;
-            color: var(--hivis);
-        }
-
-        .trust-perc-list .stat p {
-            font-size: 15px;
-            line-height: 1.4;
-        }
-
-        /* ---------- chapter 5: tax ---------- */
-        .tax-vs {
-            display: grid;
-            grid-template-columns: 1fr auto 1fr;
-            gap: 24px;
-            align-items: center;
-            margin-top: 48px;
-        }
-
-        .tax-card {
-            padding: 32px;
-            border: 2px solid var(--ink);
-            text-align: center;
-            position: relative;
-        }
-
-        .tax-card.you {
-            background: var(--paper-dark);
-        }
-
-        .tax-card.them {
-            background: var(--ink);
-            color: var(--paper);
-        }
-
-        .tax-card .who {
-            font-family: 'DM Mono', monospace;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.2em;
-            margin-bottom: 12px;
-            opacity: 0.7;
-        }
-
-        .tax-card .rate {
-            font-family: 'Bowlby One', sans-serif;
-            font-size: clamp(64px, 10vw, 130px);
-            line-height: 0.9;
-        }
-
-        .tax-card.them .rate {
-            color: var(--hivis);
-        }
-
-        .tax-card .rate .pct {
-            font-size: 0.5em;
-            vertical-align: super;
-        }
-
-        .tax-card .desc {
-            font-size: 14px;
-            max-width: 30ch;
-            margin: 12px auto 0;
-            line-height: 1.3;
-        }
-
-        .vs-divider {
-            font-family: 'Bowlby One', sans-serif;
-            font-size: clamp(40px, 5vw, 80px);
-            color: var(--hivis);
-            transform: rotate(-4deg);
-        }
-
-        .tax-note {
-            margin-top: 32px;
-            font-family: 'Caveat', cursive;
-            font-size: 26px;
-            text-align: center;
-            transform: rotate(-1deg);
-            color: var(--teal);
-        }
-
-        /* ---------- chapter 6: meanwhile ---------- */
-        .meanwhile {
-            background: var(--ink);
-            color: var(--paper);
-        }
-
-        .meanwhile h2 {
-            color: var(--paper);
-        }
-
-        .meanwhile h2 .accent {
-            color: var(--hivis-2);
-        }
-
-        .meanwhile h2 .underline {
-            background: linear-gradient(transparent 65%, var(--hivis) 65%);
-        }
-
-        .meanwhile .lede {
-            color: rgba(241, 234, 214, 0.85);
-        }
-
-        .grim-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 32px;
-            margin-top: 48px;
-        }
-
-        .grim-stat {
-            border-top: 2px solid var(--paper);
-            padding-top: 18px;
-            min-width: 0;
-            /* allow grid track to constrain content */
-        }
-
-        .grim-stat .num {
-            font-family: 'Bowlby One', sans-serif;
-            font-size: clamp(48px, 5vw, 72px);
-            line-height: 0.95;
-            color: var(--hivis-2);
-            overflow-wrap: break-word;
-            word-break: normal;
-            hyphens: none;
-        }
-
-        .grim-stat .num .small {
-            font-size: 0.4em;
-            color: var(--paper);
-        }
-
-        .grim-stat p {
-            font-size: 15px;
-            line-height: 1.4;
-            margin-top: 12px;
-            opacity: 0.85;
-        }
-
-        /* ---------- chapter 7: quote ---------- */
-        .quote-callout {
-            margin-top: 48px;
-            padding: 48px;
-            border-left: 8px solid var(--hivis);
-            background: var(--paper-dark);
-            font-family: 'Fraunces', serif;
-            font-style: italic;
-            font-size: clamp(22px, 2.6vw, 36px);
-            line-height: 1.3;
-            max-width: 80ch;
-        }
-
-        .quote-callout .who {
-            font-style: normal;
-            font-family: 'DM Mono', monospace;
-            font-size: 14px;
-            margin-top: 16px;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: var(--ink-soft);
-        }
-
-        /* ---------- footer ---------- */
-        footer {
-            padding: 64px 6vw 96px;
-            background: var(--paper-dark);
-            border-top: 3px double var(--ink);
-        }
-
-        footer h3 {
-            font-family: 'Bowlby One', sans-serif;
-            font-size: 32px;
-            margin-bottom: 24px;
-        }
-
-        .sources {
-            columns: 2;
-            column-gap: 48px;
-            font-family: 'DM Mono', monospace;
-            font-size: 12px;
-            line-height: 1.6;
-        }
-
-        .sources li {
-            break-inside: avoid;
-            margin-bottom: 10px;
-            list-style: none;
-            padding-left: 16px;
-            position: relative;
-        }
-
-        .sources li::before {
-            content: "→";
-            position: absolute;
-            left: 0;
-            color: var(--hivis);
-        }
-
-        .sources a {
-            color: var(--ink);
-            text-decoration: underline;
-            text-decoration-thickness: 1px;
-            text-underline-offset: 3px;
-        }
-
-        .sources a:hover {
-            color: var(--hivis);
-        }
-
-        .colophon {
-            margin-top: 48px;
-            padding-top: 24px;
-            border-top: 1px solid var(--rule);
-            font-family: 'DM Mono', monospace;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.15em;
-            color: var(--ink-soft);
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 16px;
-        }
-
-        /* ---------- responsive: tablet ---------- */
-        @media (max-width: 900px) {
-            .bill-stack {
-                grid-template-columns: 1fr;
-                gap: 40px;
-            }
-
-            .trust-hero {
-                grid-template-columns: 1fr;
-                gap: 24px;
-            }
-
-            .trust-perc-list {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        /* ---------- responsive: mobile ---------- */
-        @media (max-width: 640px) {
-            html {
-                -webkit-text-size-adjust: 100%;
-            }
-
-            body {
-                line-height: 1.45;
-            }
-
-            .masthead {
-                padding: 10px 18px;
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 4px;
-            }
-
-            .masthead .left,
-            .masthead .right {
-                font-size: 10px;
-                letter-spacing: 0.1em;
-            }
-
-            .hero {
-                padding: 36px 22px 56px;
-            }
-
-            .sticker {
-                display: none;
-            }
-
-            .kicker {
-                font-size: 10px;
-                padding: 5px 9px;
-                margin-bottom: 20px;
-                letter-spacing: 0.15em;
-            }
-
-            h1.title {
-                font-size: clamp(52px, 16vw, 96px);
-                line-height: 0.92;
-                letter-spacing: -0.03em;
-                margin-bottom: 20px;
-                word-break: break-word;
-            }
-
-            h1.title .strike {
-                text-decoration-thickness: 4px;
-            }
-
-            .dek {
-                font-size: 17px;
-                line-height: 1.4;
-            }
-
-            .hero-meta {
-                gap: 14px;
-                margin-top: 28px;
-                font-size: 11px;
-            }
-
-            .hero-meta span {
-                padding-left: 8px;
-                border-left-width: 2px;
-            }
-
-            section.chapter {
-                padding: 56px 22px;
-            }
-
-            .chapter-no {
-                font-size: 10px;
-                letter-spacing: 0.2em;
-            }
-
-            h2 {
-                font-size: clamp(34px, 9vw, 52px);
-                line-height: 1;
-                letter-spacing: -0.015em;
-                max-width: none;
-                margin-bottom: 20px;
-            }
-
-            h2 .underline {
-                padding: 0 2px;
-            }
-
-            .lede {
-                font-size: 16px;
-                margin-bottom: 32px;
-                line-height: 1.45;
-            }
-
-            .split-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .split-grid>div {
-                padding: 24px 20px;
-            }
-
-            .split-grid .bottom40 {
-                border-left: none;
-                border-top: 2px solid var(--ink);
-            }
-
-            .split-num {
-                font-size: 84px;
-            }
-
-            .split-desc {
-                font-size: 16px;
-            }
-
-            .dots-wrap {
-                margin-top: 40px;
-                padding: 20px;
-            }
-
-            .dots-title {
-                font-size: 11px;
-                letter-spacing: 0.1em;
-                margin-bottom: 14px;
-            }
-
-            .dots {
-                grid-template-columns: repeat(10, 1fr);
-                gap: 6px;
-                margin-bottom: 14px;
-            }
-
-            .dots-caption {
-                font-size: 11px;
-                gap: 12px;
-                flex-direction: column;
-            }
-
-            /* Chart.js panels — slimmer padding on mobile */
-            .chartjs-panel {
-                padding: 22px 16px 20px;
-            }
-
-            .chartjs-panel .panel-title {
-                font-size: 10px;
-                letter-spacing: 0.15em;
-            }
-
-            .chartjs-panel .panel-sub {
-                font-size: 10px;
-                margin-bottom: 16px;
-            }
-
-            .chartjs-footnote {
-                font-size: 11px;
-                padding-top: 12px;
-                margin-top: 14px;
-                line-height: 1.45;
-            }
-
-            .bill-stack {
-                gap: 32px;
-            }
-
-            .bill-stack .left h3 {
-                font-size: 24px;
-                line-height: 1.05;
-                margin-bottom: 14px;
-            }
-
-            .bill-stack .left p {
-                font-size: 16px;
-                margin-bottom: 14px;
-            }
-
-            .bill-scrawl {
-                font-size: 22px;
-                margin-top: 16px;
-            }
-
-            .gdp-callout {
-                padding: 20px;
-                margin-top: 0;
-            }
-
-            .gdp-callout .big-pct {
-                font-size: 92px;
-            }
-
-            .gdp-callout .pct-cap {
-                font-size: 14px;
-            }
-
-            .trust-hero {
-                gap: 16px;
-                margin-top: 20px;
-            }
-
-            .trust-num {
-                font-size: clamp(96px, 30vw, 140px);
-                line-height: 0.85;
-            }
-
-            .trust-num::after {
-                font-size: 0.22em;
-                margin-top: 4px;
-            }
-
-            .trust-facts {
-                font-size: 16px;
-                line-height: 1.5;
-            }
-
-            .trust-facts p {
-                margin-bottom: 14px;
-            }
-
-            .trust-perc-list {
-                grid-template-columns: 1fr;
-                margin-top: 40px;
-                gap: 20px;
-            }
-
-            .trust-perc-list .stat {
-                padding-top: 14px;
-                border-top-width: 3px;
-            }
-
-            .trust-perc-list .stat .num {
-                font-size: 56px;
-                margin-bottom: 8px;
-            }
-
-            .trust-perc-list .stat p {
-                font-size: 14px;
-            }
-
-            .tax-vs {
-                grid-template-columns: 1fr;
-                gap: 12px;
-                margin-top: 32px;
-            }
-
-            .tax-card {
-                padding: 24px 20px;
-            }
-
-            .tax-card .rate {
-                font-size: 84px;
-            }
-
-            .tax-card .who {
-                font-size: 10px;
-                margin-bottom: 8px;
-            }
-
-            .tax-card .desc {
-                font-size: 13px;
-            }
-
-            .vs-divider {
-                transform: rotate(0);
-                text-align: center;
-                font-size: 36px;
-                padding: 4px 0;
-            }
-
-            .tax-note {
-                font-size: 20px;
-                margin-top: 24px;
-            }
-
-            .grim-grid {
-                grid-template-columns: 1fr;
-                gap: 24px;
-                margin-top: 32px;
-            }
-
-            .grim-stat {
-                padding-top: 14px;
-            }
-
-            .grim-stat .num {
-                font-size: 56px;
-            }
-
-            .grim-stat p {
-                font-size: 14px;
-                margin-top: 8px;
-            }
-
-            .quote-callout {
-                padding: 24px 20px;
-                border-left-width: 6px;
-                font-size: 18px;
-                margin-top: 32px;
-            }
-
-            .quote-callout .who {
-                font-size: 11px;
-                letter-spacing: 0.08em;
-                margin-top: 12px;
-            }
-
-            footer {
-                padding: 48px 22px 64px;
-            }
-
-            footer h3 {
-                font-size: 26px;
-                margin-bottom: 16px;
-            }
-
-            .sources {
-                columns: 1;
-                font-size: 12px;
-            }
-
-            .sources li {
-                margin-bottom: 12px;
-                padding-left: 14px;
-            }
-
-            .colophon {
-                margin-top: 32px;
-                flex-direction: column;
-                gap: 8px;
-                font-size: 10px;
-                letter-spacing: 0.1em;
-            }
-        }
-
-        /* extra-narrow phones */
-        @media (max-width: 380px) {
-            .hero {
-                padding: 32px 16px 48px;
-            }
-
-            section.chapter {
-                padding: 48px 16px;
-            }
-
-            footer {
-                padding: 40px 16px 56px;
-            }
-
-            .masthead {
-                padding: 10px 16px;
-            }
-
-            h1.title {
-                font-size: 48px;
-            }
-
-            .split-num {
-                font-size: 72px;
-            }
-
-            .trust-num {
-                font-size: 92px;
-            }
-
-            .gdp-callout .big-pct {
-                font-size: 76px;
-            }
-
-            .tax-card .rate {
-                font-size: 72px;
-            }
-        }
-
-        /* entrance animations */
-        .reveal {
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.8s ease, transform 0.8s ease;
-        }
-
-        .reveal.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    </style>
 </head>
 
 <body>
@@ -1382,12 +81,12 @@
 
             <!-- LEFT: who they are -->
             <div class="dots-col">
-                <div class="dots-title">100 dots = 100 households · red = top 20%</div>
+                <div class="dots-title">100 dots = 100 households</div>
                 <div class="dots" id="dotgrid"></div>
                 <div class="dots-caption">
-                    <span><span class="swatch" style="background:var(--hivis)"></span>20 households (top-left
-                        block)</span>
-                    <span><span class="swatch" style="background:rgba(241,234,214,0.18)"></span>The other 80</span>
+                    <span><span class="swatch" style="background:var(--hivis)"></span>Top 20</span>
+                    <span><span class="swatch" style="background:var(--teal)"></span>Middle 30</span>
+                    <span><span class="swatch" style="background:rgba(241,234,214,0.25)"></span>Bottom 50</span>
                 </div>
             </div>
 
@@ -1396,19 +95,33 @@
 
             <!-- RIGHT: what they own -->
             <div class="wealth-col">
-                <div class="wealth-title">Share of all household wealth</div>
+                <div class="wealth-title">⌖ Share of all household wealth</div>
                 <div class="wealth-canvas-wrap">
                     <canvas id="chart-wealth-share"></canvas>
                     <div class="wealth-center">
                         <div>
                             <div class="big">66%</div>
-                            <div class="small">of all household wealth</div>
+                            <div class="small">held by the top 20%</div>
                         </div>
                     </div>
                 </div>
-                <div class="wealth-caption">
-                    The remaining 80% of households share just 34% between them.<br>
-                    (The bottom <em>half</em> hold about 2%.)
+
+                <div class="wealth-legend">
+                    <div class="lg-row">
+                        <span class="lg-swatch" style="background: var(--hivis)"></span>
+                        <span>Top 20% of households</span>
+                        <span class="lg-pct">66%</span>
+                    </div>
+                    <div class="lg-row">
+                        <span class="lg-swatch" style="background: var(--teal)"></span>
+                        <span>Middle 30% of households</span>
+                        <span class="lg-pct">32%</span>
+                    </div>
+                    <div class="lg-row">
+                        <span class="lg-swatch" style="background: rgba(241,234,214,0.25)"></span>
+                        <span>Bottom 50% of households</span>
+                        <span class="lg-pct">≈ 2%</span>
+                    </div>
                 </div>
             </div>
 
@@ -1717,13 +430,22 @@
             const isMobile = window.matchMedia('(max-width: 640px)').matches;
             const cols = isMobile ? 10 : 20;
             const rows = isMobile ? 10 : 5;
-            const richCols = isMobile ? 2 : 4;
+            const richCols = isMobile ? 2 : 4;   // 20% → 20 dots
+            const middleCols = isMobile ? 3 : 6;   // 30% → 30 dots (continues after rich)
+            // remaining columns = bottom 50% → 50 dots (default style)
+
             dotGrid.innerHTML = '';
             for (let i = 0; i < cols * rows; i++) {
                 const col = i % cols;
-                const isRich = col < richCols;
                 const d = document.createElement('div');
-                d.className = 'dot' + (isRich ? ' rich' : '');
+                let cls = 'dot';
+                if (col < richCols) {
+                    cls += ' rich';
+                } else if (col < richCols + middleCols) {
+                    cls += ' middle';
+                }
+                // else: default faint dot (bottom 50%)
+                d.className = cls;
                 dotGrid.appendChild(d);
             }
         }
@@ -1748,9 +470,6 @@
         Chart.defaults.color = PAPER;
         Chart.defaults.borderColor = FAINT;
 
-        /* ---- a small inline plugin to draw bar values inside/outside each bar.
-           Chart.js core has no data-labels; this draws them in a consistent way
-           and styles them with the display font. ---- */
         const dataLabelsPlugin = {
             id: 'dataLabels',
             afterDatasetsDraw(chart, args, opts) {
@@ -1773,8 +492,6 @@
                         ctx.fillText(formatted, bar.x + 8, bar.y);
                     } else {
                         ctx.textAlign = 'center';
-                        // For tall bars the label fits above; for tiny bars it would clip,
-                        // so always sit above the bar's tip
                         ctx.fillText(formatted, bar.x, bar.y - 10);
                     }
                     ctx.restore();
@@ -1789,10 +506,14 @@
             new Chart(wealthCanvas, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Top 20% of households', 'Other 80% of households'],
+                    labels: [
+                        'Top 20% of households',
+                        'Middle 30% of households',
+                        'Bottom 50% of households'
+                    ],
                     datasets: [{
-                        data: [66, 34],
-                        backgroundColor: [HIVIS, 'rgba(241,234,214,0.25)'],
+                        data: [66, 32, 2],
+                        backgroundColor: [HIVIS, TEAL, 'rgba(241,234,214,0.25)'],
                         borderColor: INK,
                         borderWidth: 2,
                         hoverOffset: 6
@@ -1805,19 +526,19 @@
                     plugins: {
                         legend: { display: false },
                         dataLabels: { display: false }, // suppress our custom plugin on this chart
-                        tooltip: {
-                            backgroundColor: INK,
-                            titleColor: PAPER,
-                            bodyColor: PAPER,
-                            borderColor: HIVIS,
-                            borderWidth: 1,
-                            padding: 10,
-                            titleFont: { family: "'Bowlby One', sans-serif", size: 14 },
-                            bodyFont: { family: "'DM Mono', monospace", size: 12 },
-                            callbacks: {
-                                label: ctx => ctx.label + ': ' + ctx.parsed + '% of all wealth'
-                            }
-                        }
+                        // tooltip: {
+                        //     backgroundColor: INK,
+                        //     titleColor: PAPER,
+                        //     bodyColor: PAPER,
+                        //     borderColor: HIVIS,
+                        //     borderWidth: 1,
+                        //     padding: 10,
+                        //     titleFont: { family: "'Bowlby One', sans-serif", size: 14 },
+                        //     bodyFont: { family: "'DM Mono', monospace", size: 12 },
+                        //     callbacks: {
+                        //         label: ctx => ctx.label + ' hold ' + ctx.parsed + '% of all wealth'
+                        //     }
+                        // }
                     }
                 }
             });
@@ -1853,20 +574,20 @@
                     layout: { padding: { top: 24, right: 8, bottom: 0, left: 0 } },
                     plugins: {
                         legend: { display: false },
-                        tooltip: {
-                            backgroundColor: INK,
-                            titleColor: PAPER,
-                            bodyColor: PAPER,
-                            borderColor: HIVIS,
-                            borderWidth: 1,
-                            padding: 10,
-                            titleFont: { family: "'Bowlby One', sans-serif", size: 14 },
-                            bodyFont: { family: "'DM Mono', monospace", size: 12 },
-                            callbacks: {
-                                title: items => items[0].label.replace(',', ' · '),
-                                label: ctx => 'Median: $' + ctx.parsed.y.toLocaleString('en-NZ')
-                            }
-                        },
+                        // tooltip: {
+                        //     backgroundColor: INK,
+                        //     titleColor: PAPER,
+                        //     bodyColor: PAPER,
+                        //     borderColor: HIVIS,
+                        //     borderWidth: 1,
+                        //     padding: 10,
+                        //     titleFont: { family: "'Bowlby One', sans-serif", size: 14 },
+                        //     bodyFont: { family: "'DM Mono', monospace", size: 12 },
+                        //     callbacks: {
+                        //         title: items => items[0].label.replace(',', ' · '),
+                        //         label: ctx => 'Median: $' + ctx.parsed.y.toLocaleString('en-NZ')
+                        //     }
+                        // },
                         dataLabels: {
                             color: PAPER,
                             formatter: v => '$' + (v >= 1000000 ? (v / 1000000).toFixed(v >= 1000000 ? 2 : 1).replace(/\.?0+$/, '') + 'm' : (v / 1000).toFixed(0) + 'k')
@@ -1924,19 +645,19 @@
                     layout: { padding: { top: 4, right: 80, bottom: 4, left: 0 } },
                     plugins: {
                         legend: { display: false },
-                        tooltip: {
-                            backgroundColor: INK,
-                            titleColor: PAPER,
-                            bodyColor: PAPER,
-                            borderColor: HIVIS,
-                            borderWidth: 1,
-                            padding: 10,
-                            titleFont: { family: "'Bowlby One', sans-serif", size: 14 },
-                            bodyFont: { family: "'DM Mono', monospace", size: 12 },
-                            callbacks: {
-                                label: ctx => '$' + ctx.parsed.x.toFixed(1) + ' billion'
-                            }
-                        },
+                        // tooltip: {
+                        //     backgroundColor: INK,
+                        //     titleColor: PAPER,
+                        //     bodyColor: PAPER,
+                        //     borderColor: HIVIS,
+                        //     borderWidth: 1,
+                        //     padding: 10,
+                        //     titleFont: { family: "'Bowlby One', sans-serif", size: 14 },
+                        //     bodyFont: { family: "'DM Mono', monospace", size: 12 },
+                        //     callbacks: {
+                        //         label: ctx => '$' + ctx.parsed.x.toFixed(1) + ' billion'
+                        //     }
+                        // },
                         dataLabels: {
                             color: HIVIS_2,
                             formatter: v => '$' + (v >= 1 ? v.toFixed(1) + 'b' : (v * 1000).toFixed(0) + 'm')
